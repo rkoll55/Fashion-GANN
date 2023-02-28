@@ -1,6 +1,6 @@
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Conv2D,Dropout,Dense,Flatten,Conv2DTranspose,BatchNormalization,LeakyReLU, Reshape
+from keras.layers import Conv2D,Dropout,Dense,Flatten,Conv2DTranspose,BatchNormalization,LeakyReLU, Reshape,UpSampling2D
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
@@ -47,4 +47,23 @@ def build_generator():
     model.add(Reshape((7,7,128)))
     # takes the dense layer and generates the 7*7 image with 128 layer
 
-    return model
+
+    model.add(UpSampling2D())
+    #Upscales to 14*14*128
+    model.add(Conv2D(128,5,padding ='same'))
+    #Extracts local features from the input data
+    model.add(LeakyReLU(0.2))
+    #Second leaky relu to help with non linearities
+
+    model.add(UpSampling2D())
+    model.add(Conv2D(128,5,padding ='same')) # gets 128 different features from the input data
+    model.add(LeakyReLU(0.2))
+
+    model.add(Conv2D(128,5,padding ='same'))
+    model.add(LeakyReLU(0.2))
+    # adds more params to the neural network to help it learn more
+    model.add(Conv2D(128,5,padding ='same'))
+    model.add(LeakyReLU(0.2))
+    #should return 28*28*128
+    model.add(Conv2D(1,4,padding='same',activation='sigmoid'))
+    return model 
